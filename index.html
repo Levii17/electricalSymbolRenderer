@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrical Symbols with Fabric.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .controls {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .symbol-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .symbol-item {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        .symbol-item:hover {
+            border-color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .symbol-item.selected {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        .symbol-preview {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 8px;
+            border: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .symbol-name {
+            font-size: 10px;
+            font-weight: bold;
+            color: #333;
+            word-wrap: break-word;
+        }
+        .canvas-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Electrical Symbols - Fabric.js Renderer</h1>
+        
+        <div class="controls">
+            <button class="btn" onclick="clearCanvas()">Clear Canvas</button>
+            <button class="btn" onclick="exportCanvas()">Export PNG</button>
+            <button class="btn" onclick="saveProject()">Save Project</button>
+            <span style="margin-left: 20px;">Click a symbol, then click on the canvas to place it</span>
+        </div>
+
+        <div class="symbol-grid" id="symbolGrid"></div>
+
+        <div class="canvas-container">
+            <canvas id="electricalCanvas" width="800" height="600"></canvas>
+        </div>
+
+        <div class="status" id="status">Ready - Select a symbol to place</div>
+    </div>
+
+    <script>
+        // Electrical symbols data
+        const symbols = [
+            {
+                "id": "circuit-breaker-single-pole",
+                "name": "Circuit Breaker (Single Pole)",
+                "category": "protection",
+                "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"50\" height=\"50\" viewBox=\"0 0 50 50\"><line x1=\"25\" y1=\"5\" x2=\"25\" y2=\"15\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"15\" y=\"15\" width=\"20\" height=\"25\" fill=\"none\" stroke=\"#000\" stroke-width=\"2\"/><circle cx=\"25\" cy=\"22\" r=\"2\" fill=\"#000\"/><circle cx=\"25\" cy=\"33\" r=\"2\" fill=\"#000\"/><line x1=\"30\" y1=\"21\" x2=\"25\" y2=\"33\" stroke=\"#000\" stroke-width=\"2\"/><line x1=\"25\" y1=\"40\" x2=\"25\" y2=\"45\" stroke=\"#000\" stroke-width=\"2\"/></svg>",
+                "connectionPoints": [
+                    { "x": 25, "y": 5, "type": "input" },
+                    { "x": 25, "y": 45, "type": "output" }
+                ]
+            },
+            {
+                "id": "push-button-start",
+                "name": "Push Button (Start)",
+                "category": "switches",
+                "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"50\" height=\"50\" viewBox=\"0 0 50 50\"><text x=\"25\" y=\"10\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"8\" font-weight=\"bold\" fill=\"#000\">I</text><line x1=\"15\" y1=\"18\" x2=\"15\" y2=\"22\" stroke=\"#000\" stroke-width=\"2\"/><line x1=\"15\" y1=\"18\" x2=\"35\" y2=\"18\" stroke=\"#000\" stroke-width=\"2\"/><line x1=\"35\" y1=\"18\" x2=\"35\" y2=\"22\" stroke=\"#000\" stroke-width=\"2\"/><line x1=\"25\" y1=\"18\" x2=\"25\" y2=\"30\" stroke=\"#000\" stroke-width=\"2\"/><line x1=\"12\" y1=\"30\" x2=\"38\" y2=\"30\" stroke=\"#000\" stroke-width=\"2\"/><line x1=\"5\" y1=\"40\" x2=\"15\" y2=\"40\" stroke=\"#000\" stroke-width=\"2\"/><circle cx=\"15\" cy=\"40\" r=\"3\" fill=\"#000\"/><circle cx=\"35\" cy=\"40\" r=\"3\" fill=\"#000\"/><line x1=\"35\" y1=\"40\" x2=\"45\" y2=\"40\" stroke=\"#000\" stroke-width=\"2\"/></svg>",
+                "connectionPoints": [
+                    { "x": 15, "y": 40, "type": "input" },
+                    { "x": 35, "y": 40, "type": "output" }
+                ]
+            },
+            {
+                "id": "contactor-triple",
+                "name": "Contactor (Triple)",
+                "category": "motors",
+                "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"50\" height=\"50\" viewBox=\"0 0 50 50\"><line x1=\"8\" y1=\"5\" x2=\"8\" y2=\"22\" stroke=\"#f00\" stroke-width=\"2\"/><circle cx=\"8\" cy=\"22\" r=\"2\" fill=\"#000\"/><line x1=\"8\" y1=\"28\" x2=\"8\" y2=\"45\" stroke=\"#f00\" stroke-width=\"2\"/><circle cx=\"8\" cy=\"28\" r=\"2\" fill=\"#000\"/><line x1=\"21\" y1=\"5\" x2=\"21\" y2=\"22\" stroke=\"#ff0\" stroke-width=\"2\"/><circle cx=\"21\" cy=\"22\" r=\"2\" fill=\"#000\"/><line x1=\"21\" y1=\"28\" x2=\"21\" y2=\"45\" stroke=\"#ff0\" stroke-width=\"2\"/><circle cx=\"21\" cy=\"28\" r=\"2\" fill=\"#000\"/><line x1=\"34\" y1=\"5\" x2=\"34\" y2=\"22\" stroke=\"#00f\" stroke-width=\"2\"/><circle cx=\"34\" cy=\"22\" r=\"2\" fill=\"#000\"/><line x1=\"34\" y1=\"28\" x2=\"34\" y2=\"45\" stroke=\"#00f\" stroke-width=\"2\"/><circle cx=\"34\" cy=\"28\" r=\"2\" fill=\"#000\"/><line x1=\"8\" y1=\"25\" x2=\"46\" y2=\"25\" stroke=\"#000\" stroke-width=\"2\" stroke-dasharray=\"2,2\"/><rect x=\"38\" y=\"18\" width=\"8\" height=\"14\" fill=\"none\" stroke=\"#000\" stroke-width=\"2\"/><line x1=\"38\" y1=\"32\" x2=\"46\" y2=\"18\" stroke=\"#000\" stroke-width=\"2\"/></svg>",
+                "connectionPoints": [
+                    { "x": 8, "y": 5, "type": "input" },
+                    { "x": 21, "y": 5, "type": "input" },
+                    { "x": 34, "y": 5, "type": "input" },
+                    { "x": 8, "y": 45, "type": "output" },
+                    { "x": 21, "y": 45, "type": "output" },
+                    { "x": 34, "y": 45, "type": "output" }
+                ]
+            }
+        ];
+
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas('electricalCanvas', {
+            backgroundColor: 'white',
+            selection: true
+        });
+
+        let selectedSymbol = null;
+        let placementMode = false;
+
+        // Symbol class extending fabric.Group
+        class ElectricalSymbol extends fabric.Group {
+            constructor(symbolData, options = {}) {
+                super([], options);
+                this.symbolData = symbolData;
+                this.type = 'electrical-symbol';
+                this.loadFromSVG(symbolData.svg);
+            }
+
+            loadFromSVG(svgString) {
+                const self = this;
+                fabric.loadSVGFromString(svgString, function(objects, options) {
+                    // Create a group from the SVG objects
+                    const group = new fabric.Group(objects, options);
+                    
+                    // Add the group as a single object to this symbol
+                    self.addWithUpdate(group);
+                    
+                    // Set reasonable defaults
+                    self.set({
+                        left: 100,
+                        top: 100,
+                        selectable: true,
+                        hasControls: true,
+                        hasBorders: true,
+                        cornerColor: '#007bff',
+                        cornerStyle: 'circle',
+                        borderColor: '#007bff',
+                        transparentCorners: false
+                    });
+                    
+                    canvas.renderAll();
+                });
+            }
+
+            // Method to get connection points in global coordinates
+            getConnectionPoints() {
+                const points = [];
+                const symbolData = this.symbolData;
+                
+                if (symbolData.connectionPoints) {
+                    symbolData.connectionPoints.forEach(point => {
+                        const globalPoint = fabric.util.transformPoint(
+                            new fabric.Point(point.x - 25, point.y - 25), // Adjust for center
+                            this.calcTransformMatrix()
+                        );
+                        points.push({
+                            x: globalPoint.x,
+                            y: globalPoint.y,
+                            type: point.type
+                        });
+                    });
+                }
+                return points;
+            }
+        }
+
+        // Create symbol grid
+        function createSymbolGrid() {
+            const grid = document.getElementById('symbolGrid');
+            
+            symbols.forEach(symbol => {
+                const item = document.createElement('div');
+                item.className = 'symbol-item';
+                item.dataset.symbolId = symbol.id;
+                
+                const preview = document.createElement('div');
+                preview.className = 'symbol-preview';
+                preview.innerHTML = symbol.svg;
+                
+                const name = document.createElement('div');
+                name.className = 'symbol-name';
+                name.textContent = symbol.name;
+                
+                item.appendChild(preview);
+                item.appendChild(name);
+                
+                item.addEventListener('click', () => selectSymbol(symbol));
+                
+                grid.appendChild(item);
+            });
+        }
+
+        // Select symbol for placement
+        function selectSymbol(symbol) {
+            selectedSymbol = symbol;
+            placementMode = true;
+            
+            // Update UI
+            document.querySelectorAll('.symbol-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            document.querySelector(`[data-symbol-id="${symbol.id}"]`).classList.add('selected');
+            
+            updateStatus(`Selected: ${symbol.name} - Click on canvas to place`);
+            canvas.defaultCursor = 'crosshair';
+        }
+
+        // Place symbol on canvas
+        function placeSymbol(pointer) {
+            if (!selectedSymbol || !placementMode) return;
+            
+            const electricalSymbol = new ElectricalSymbol(selectedSymbol, {
+                left: pointer.x - 25,
+                top: pointer.y - 25
+            });
+            
+            canvas.add(electricalSymbol);
+            canvas.setActiveObject(electricalSymbol);
+            
+            updateStatus(`Placed: ${selectedSymbol.name}`);
+            
+            // Reset placement mode
+            placementMode = false;
+            canvas.defaultCursor = 'default';
+            
+            // Keep symbol selected for multiple placements
+            // Comment out the next two lines if you want single placement
+            // selectedSymbol = null;
+            // document.querySelectorAll('.symbol-item').forEach(item => item.classList.remove('selected'));
+        }
+
+        // Canvas click handler
+        canvas.on('mouse:down', function(options) {
+            if (placementMode && selectedSymbol) {
+                placeSymbol(options.pointer);
+            }
+        });
+
+        // Object selection handler
+        canvas.on('selection:created', function(options) {
+            const obj = options.selected[0];
+            if (obj && obj.type === 'electrical-symbol') {
+                updateStatus(`Selected: ${obj.symbolData.name}`);
+            }
+        });
+
+        // Clear canvas
+        function clearCanvas() {
+            canvas.clear();
+            canvas.backgroundColor = 'white';
+            updateStatus('Canvas cleared');
+        }
+
+        // Export canvas as PNG
+        function exportCanvas() {
+            const dataURL = canvas.toDataURL({
+                format: 'png',
+                quality: 1.0
+            });
+            
+            const link = document.createElement('a');
+            link.download = 'electrical-diagram.png';
+            link.href = dataURL;
+            link.click();
+            
+            updateStatus('Canvas exported as PNG');
+        }
+
+        // Save project (simplified - would need backend in real implementation)
+        function saveProject() {
+            const projectData = {
+                objects: canvas.toJSON(['symbolData']),
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(projectData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.download = 'electrical-diagram.json';
+            link.href = URL.createObjectURL(dataBlob);
+            link.click();
+            
+            updateStatus('Project saved as JSON');
+        }
+
+        // Update status message
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject) {
+                    canvas.remove(activeObject);
+                    updateStatus('Object deleted');
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                placementMode = false;
+                selectedSymbol = null;
+                canvas.defaultCursor = 'default';
+                document.querySelectorAll('.symbol-item').forEach(item => item.classList.remove('selected'));
+                updateStatus('Placement cancelled');
+            }
+        });
+
+        // Initialize the application
+        createSymbolGrid();
+        updateStatus('Ready - Select a symbol to place');
+
+        // Add some helpful canvas interactions
+        canvas.on('object:moving', function(options) {
+            updateStatus(`Moving: ${options.target.symbolData?.name || 'Object'}`);
+        });
+
+        canvas.on('object:scaling', function(options) {
+            updateStatus(`Scaling: ${options.target.symbolData?.name || 'Object'}`);
+        });
+
+        canvas.on('object:rotating', function(options) {
+            updateStatus(`Rotating: ${options.target.symbolData?.name || 'Object'}`);
+        });
+    </script>
+</body>
+</html>
