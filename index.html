@@ -1,116 +1,336 @@
 <!DOCTYPE html>
+<!--
+  ______ .______       _______     ___   .___________. _______  _______  
+ /      ||   _  \     |   ____|   /   \  |           ||   ____||       \ 
+|  ,----'|  |_)  |    |  |__     /  ^  \ `---|  |----`|  |__   |  .--.  |
+|  |     |      /     |   __|   /  /_\  \    |  |     |   __|  |  |  |  |
+|  `----.|  |\  \----.|  |____ /  _____  \   |  |     |  |____ |  '--'  |
+ \______|| _| `._____||_______/__/     \__\  |__|     |_______||_______/ 
+                                                                         
+.______   ____    ____    ___   ___   ______    __       __              
+|   _  \  \   \  /   /    \  \ /  /  /  __  \  |  |     |  |             
+|  |_)  |  \   \/   /      \  V  /  |  |  |  | |  |     |  |             
+|   _  <    \_    _/        >   <   |  |  |  | |  |     |  |             
+|  |_)  |     |  |         /  .  \  |  `--'  | |  `----.|  |             
+|______/      |__|        /__/ \__\  \______/  |_______||__|     
+        
+                IG: x_mxolisi_x
+
+  
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electrical Symbols with Fabric.js</title>
+    <title>Electrical Symbols Editor with Fabric.js</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
     <style>
         body {
             margin: 0;
             padding: 20px;
-            font-family: Arial, sans-serif;
-            background: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+        .header {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 15px 0;
+            background: linear-gradient(90deg, #1a2980, #26d0ce);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 2.2rem;
+        }
+        .header p {
+            margin: 8px 0 0;
+            opacity: 0.9;
         }
         .controls {
             margin-bottom: 20px;
             background: white;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         }
         .symbol-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
             margin-bottom: 20px;
         }
         .symbol-item {
             background: white;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
+            border: 2px solid #e1e5ee;
+            border-radius: 10px;
+            padding: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
         }
         .symbol-item:hover {
-            border-color: #007bff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #4e73df;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(78, 115, 223, 0.15);
         }
         .symbol-item.selected {
-            border-color: #007bff;
-            background: #e3f2fd;
+            border-color: #4e73df;
+            background: #e8efff;
+            box-shadow: 0 4px 8px rgba(78, 115, 223, 0.2);
         }
         .symbol-preview {
-            width: 60px;
-            height: 60px;
-            margin: 0 auto 8px;
-            border: 1px solid #eee;
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 10px;
+            border: 1px solid #f0f0f0;
+            border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: #fafbff;
         }
         .symbol-name {
-            font-size: 10px;
-            font-weight: bold;
-            color: #333;
-            word-wrap: break-word;
+            font-size: 11px;
+            font-weight: 600;
+            color: #4a5568;
         }
         .canvas-container {
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             padding: 20px;
+            height: fit-content;
         }
         canvas {
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .btn {
-            background: #007bff;
+            background: linear-gradient(90deg, #4e73df, #6a11cb);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 18px;
+            border-radius: 6px;
             cursor: pointer;
-            margin-right: 10px;
+            margin-right: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(78, 115, 223, 0.3);
         }
         .btn:hover {
-            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(78, 115, 223, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn-clear {
+            background: linear-gradient(90deg, #e53e3e, #c53030);
+        }
+        .btn-export {
+            background: linear-gradient(90deg, #38a169, #2f855a);
+        }
+        .btn-save {
+            background: linear-gradient(90deg, #ed8936, #dd6b20);
         }
         .status {
-            margin-top: 10px;
-            padding: 10px;
+            margin-top: 15px;
+            padding: 12px;
             background: #e8f5e8;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 14px;
+            font-weight: 500;
+            border-left: 4px solid #38a169;
+        }
+        .property-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            height: fit-content;
+        }
+        .property-panel h3 {
+            margin-top: 0;
+            color: #2d3748;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .property-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .property-group h4 {
+            margin: 0 0 15px 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+        }
+        .property-group h4 i {
+            margin-right: 8px;
+            color: #4e73df;
+        }
+        .property-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .property-field {
+            margin-bottom: 15px;
+        }
+        .property-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #4a5568;
+        }
+        .property-field input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .property-field input:focus {
+            outline: none;
+            border-color: #4e73df;
+            box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.2);
+        }
+        .no-selection {
+            text-align: center;
+            padding: 40px 20px;
+            color: #a0aec0;
+        }
+        .no-selection i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #cbd5e0;
+        }
+        .connection-info {
+            background: #f8f9fc;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 15px;
+            border-left: 3px solid #4e73df;
+        }
+        .connection-point {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 6px;
+            border-radius: 4px;
+            background: #f0f5ff;
+        }
+        .point-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .input-point .point-color {
+            background: #38a169;
+        }
+        .output-point .point-color {
+            background: #e53e3e;
+        }
+        .point-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .instructions {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        .instructions h4 {
+            margin-top: 0;
+            color: #2d3748;
+            border-bottom: 1px solid #cfe0ff;
+            padding-bottom: 8px;
+        }
+        .instructions ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        .connection-hint {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 5px;
+        }
+        .hint-input {
+            background: #38a169;
+        }
+        .hint-output {
+            background: #e53e3e;
+        }
+        .hotkey {
+            display: inline-block;
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Electrical Symbols - Fabric.js Renderer</h1>
+        <div class="header">
+            <h1><i class="fas fa-bolt"></i> Electrical Symbols Editor</h1>
+            <p>Create and edit electrical diagrams with Fabric.js</p>
+        </div>
         
-        <div class="controls">
-            <button class="btn" onclick="clearCanvas()">Clear Canvas</button>
-            <button class="btn" onclick="exportCanvas()">Export PNG</button>
-            <button class="btn" onclick="saveProject()">Save Project</button>
-            <span style="margin-left: 20px;">Click a symbol, then click on the canvas to place it</span>
+        <div class="main-content">
+            <div class="controls">
+                <button class="btn btn-clear" onclick="clearCanvas()"><i class="fas fa-trash-alt"></i> Clear Canvas</button>
+                <button class="btn btn-export" onclick="exportCanvas()"><i class="fas fa-download"></i> Export PNG</button>
+                <button class="btn btn-save" onclick="saveProject()"><i class="fas fa-save"></i> Save Project</button>
+                <span style="margin-left: 20px; font-weight: 500;">Click a symbol, then click on the canvas to place it</span>
+            </div>
+
+            <div class="symbol-grid" id="symbolGrid"></div>
+
+            <div class="canvas-container">
+                <canvas id="electricalCanvas" width="800" height="600"></canvas>
+            </div>
+
+            <div class="status" id="status">Ready - Select a symbol to place</div>
         </div>
-
-        <div class="symbol-grid" id="symbolGrid"></div>
-
-        <div class="canvas-container">
-            <canvas id="electricalCanvas" width="800" height="600"></canvas>
+        
+        <div class="property-panel" id="propertyPanel">
+            <h3><i class="fas fa-sliders-h"></i> Properties</h3>
+            <div id="propertyContent">
+                <div class="no-selection">
+                    <i class="fas fa-mouse-pointer"></i>
+                    <h4>No Object Selected</h4>
+                    <p>Select a symbol on the canvas to edit its properties</p>
+                </div>
+            </div>
         </div>
-
-        <div class="status" id="status">Ready - Select a symbol to place</div>
     </div>
 
     <script>
@@ -155,11 +375,15 @@
         // Initialize Fabric.js canvas
         const canvas = new fabric.Canvas('electricalCanvas', {
             backgroundColor: 'white',
-            selection: true
+            selection: true,
+            selectionColor: 'rgba(78, 115, 223, 0.3)',
+            selectionBorderColor: '#4e73df',
+            selectionLineWidth: 2
         });
 
         let selectedSymbol = null;
         let placementMode = false;
+        let propertyInputs = {};
 
         // Symbol class extending fabric.Group
         class ElectricalSymbol extends fabric.Group {
@@ -186,10 +410,12 @@
                         selectable: true,
                         hasControls: true,
                         hasBorders: true,
-                        cornerColor: '#007bff',
+                        cornerColor: '#4e73df',
                         cornerStyle: 'circle',
-                        borderColor: '#007bff',
-                        transparentCorners: false
+                        borderColor: '#4e73df',
+                        transparentCorners: false,
+                        cornerSize: 12,
+                        padding: 8
                     });
                     
                     canvas.renderAll();
@@ -203,13 +429,18 @@
                 
                 if (symbolData.connectionPoints) {
                     symbolData.connectionPoints.forEach(point => {
-                        const globalPoint = fabric.util.transformPoint(
-                            new fabric.Point(point.x - 25, point.y - 25), // Adjust for center
+                        // Adjust for the center of the symbol (original SVG is 50x50)
+                        const localPoint = new fabric.Point(point.x - 25, point.y - 25);
+                        
+                        // Transform to global canvas coordinates
+                        const transformedPoint = fabric.util.transformPoint(
+                            localPoint,
                             this.calcTransformMatrix()
                         );
+                        
                         points.push({
-                            x: globalPoint.x,
-                            y: globalPoint.y,
+                            x: transformedPoint.x,
+                            y: transformedPoint.y,
                             type: point.type
                         });
                     });
@@ -276,11 +507,179 @@
             // Reset placement mode
             placementMode = false;
             canvas.defaultCursor = 'default';
+        }
+
+        // Show properties for selected object
+        function showProperties(obj) {
+            const content = document.getElementById('propertyContent');
             
-            // Keep symbol selected for multiple placements
-            // Comment out the next two lines if you want single placement
-            // selectedSymbol = null;
-            // document.querySelectorAll('.symbol-item').forEach(item => item.classList.remove('selected'));
+            if (!obj || obj.type !== 'electrical-symbol') {
+                content.innerHTML = `
+                    <div class="no-selection">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <h4>No Object Selected</h4>
+                        <p>Select a symbol on the canvas to edit its properties</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const symbol = obj.symbolData;
+            const points = obj.getConnectionPoints();
+            
+            let connectionsHTML = '';
+            points.forEach((point, index) => {
+                const pointType = point.type === 'input' ? 'Input' : 'Output';
+                connectionsHTML += `
+                    <div class="connection-point ${point.type}-point">
+                        <div class="point-color"></div>
+                        <div class="point-label">${pointType} Point ${index + 1}</div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = `
+                <div class="property-group">
+                    <h4><i class="fas fa-info-circle"></i> Symbol Information</h4>
+                    <div class="property-field">
+                        <label>Name</label>
+                        <input type="text" value="${symbol.name}" disabled>
+                    </div>
+                    <div class="property-field">
+                        <label>Category</label>
+                        <input type="text" value="${symbol.category}" disabled>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h4><i class="fas fa-vector-square"></i> Position & Rotation</h4>
+                    <div class="property-row">
+                        <div class="property-field">
+                            <label>Position X</label>
+                            <input type="number" id="prop-left" value="${Math.round(obj.left)}">
+                        </div>
+                        <div class="property-field">
+                            <label>Position Y</label>
+                            <input type="number" id="prop-top" value="${Math.round(obj.top)}">
+                        </div>
+                    </div>
+                    <div class="property-row">
+                        <div class="property-field">
+                            <label>Rotation</label>
+                            <input type="number" id="prop-angle" value="${Math.round(obj.angle)}" min="0" max="360">
+                        </div>
+                        <div class="property-field">
+                            <label>Opacity</label>
+                            <input type="number" id="prop-opacity" value="${obj.opacity}" min="0.1" max="1" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h4><i class="fas fa-expand-alt"></i> Scale</h4>
+                    <div class="property-row">
+                        <div class="property-field">
+                            <label>Scale X</label>
+                            <input type="number" id="prop-scaleX" value="${obj.scaleX.toFixed(2)}" min="0.1" max="5" step="0.1">
+                        </div>
+                        <div class="property-field">
+                            <label>Scale Y</label>
+                            <input type="number" id="prop-scaleY" value="${obj.scaleY.toFixed(2)}" min="0.1" max="5" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h4><i class="fas fa-plug"></i> Connection Points</h4>
+                    <div class="connection-info">
+                        ${connectionsHTML}
+                        <p style="margin-top: 12px; font-size: 12px; color: #4a5568;">
+                            <span class="connection-hint hint-input"></span> Input points 
+                            <span class="connection-hint hint-output"></span> Output points
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="instructions">
+                    <h4><i class="fas fa-lightbulb"></i> Editing Tips</h4>
+                    <ul>
+                        <li>Drag symbols to reposition them</li>
+                        <li>Use corner handles to resize</li>
+                        <li>Rotate with the top rotate handle</li>
+                        <li>Press <span class="hotkey">Delete</span> to remove selected symbol</li>
+                        <li>Press <span class="hotkey">Esc</span> to cancel placement</li>
+                    </ul>
+                </div>
+            `;
+            
+            // Setup property inputs
+            propertyInputs = {
+                left: document.getElementById('prop-left'),
+                top: document.getElementById('prop-top'),
+                angle: document.getElementById('prop-angle'),
+                scaleX: document.getElementById('prop-scaleX'),
+                scaleY: document.getElementById('prop-scaleY'),
+                opacity: document.getElementById('prop-opacity')
+            };
+            
+            // Add event listeners
+            for (const prop in propertyInputs) {
+                propertyInputs[prop].addEventListener('change', () => {
+                    const value = prop === 'opacity' ? 
+                        parseFloat(propertyInputs[prop].value) : 
+                        (prop.includes('scale') ? 
+                         parseFloat(propertyInputs[prop].value) : 
+                         parseInt(propertyInputs[prop].value));
+                    
+                    obj.set(prop, value).setCoords();
+                    canvas.requestRenderAll();
+                });
+            }
+        }
+
+        // Hide properties panel
+        function hideProperties() {
+            const content = document.getElementById('propertyContent');
+            content.innerHTML = `
+                <div class="no-selection">
+                    <i class="fas fa-mouse-pointer"></i>
+                    <h4>No Object Selected</h4>
+                    <p>Select a symbol on the canvas to edit its properties</p>
+                </div>
+            `;
+        }
+
+        // Draw connection points
+        function drawConnectionPoints() {
+            const activeObj = canvas.getActiveObject();
+            if (!activeObj || activeObj.type !== 'electrical-symbol') return;
+            
+            const ctx = canvas.getContext();
+            const points = activeObj.getConnectionPoints();
+            
+            ctx.save();
+            
+            points.forEach(point => {
+                // Draw connection point
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+                
+                // Style based on point type
+                if (point.type === 'input') {
+                    ctx.fillStyle = 'rgba(56, 161, 105, 0.8)';
+                } else {
+                    ctx.fillStyle = 'rgba(229, 62, 62, 0.8)';
+                }
+                
+                ctx.fill();
+                
+                // Draw white border
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'white';
+                ctx.stroke();
+            });
+            
+            ctx.restore();
         }
 
         // Canvas click handler
@@ -290,19 +689,59 @@
             }
         });
 
-        // Object selection handler
+        // Object selection handlers
         canvas.on('selection:created', function(options) {
             const obj = options.selected[0];
             if (obj && obj.type === 'electrical-symbol') {
                 updateStatus(`Selected: ${obj.symbolData.name}`);
+                showProperties(obj);
             }
+        });
+
+        canvas.on('selection:updated', function(options) {
+            const obj = options.selected[0];
+            if (obj && obj.type === 'electrical-symbol') {
+                showProperties(obj);
+            }
+        });
+
+        canvas.on('selection:cleared', function() {
+            hideProperties();
+            updateStatus('Selection cleared');
+        });
+
+        // Update properties when object is modified
+        canvas.on('object:modified', function(e) {
+            const obj = e.target;
+            if (obj.type !== 'electrical-symbol') return;
+            
+            if (propertyInputs.left) {
+                propertyInputs.left.value = Math.round(obj.left);
+                propertyInputs.top.value = Math.round(obj.top);
+                propertyInputs.angle.value = Math.round(obj.angle);
+                propertyInputs.scaleX.value = obj.scaleX.toFixed(2);
+                propertyInputs.scaleY.value = obj.scaleY.toFixed(2);
+            }
+        });
+
+        // Draw connection points after rendering
+        canvas.on('after:render', function() {
+            drawConnectionPoints();
         });
 
         // Clear canvas
         function clearCanvas() {
-            canvas.clear();
-            canvas.backgroundColor = 'white';
-            updateStatus('Canvas cleared');
+            if (canvas.getObjects().length === 0) {
+                updateStatus('Canvas is already empty');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear the canvas?')) {
+                canvas.clear();
+                canvas.backgroundColor = 'white';
+                hideProperties();
+                updateStatus('Canvas cleared');
+            }
         }
 
         // Export canvas as PNG
@@ -320,7 +759,7 @@
             updateStatus('Canvas exported as PNG');
         }
 
-        // Save project (simplified - would need backend in real implementation)
+        // Save project (simplified)
         function saveProject() {
             const projectData = {
                 objects: canvas.toJSON(['symbolData']),
@@ -350,6 +789,7 @@
                 if (activeObject) {
                     canvas.remove(activeObject);
                     updateStatus('Object deleted');
+                    hideProperties();
                 }
             }
             
@@ -365,19 +805,6 @@
         // Initialize the application
         createSymbolGrid();
         updateStatus('Ready - Select a symbol to place');
-
-        // Add some helpful canvas interactions
-        canvas.on('object:moving', function(options) {
-            updateStatus(`Moving: ${options.target.symbolData?.name || 'Object'}`);
-        });
-
-        canvas.on('object:scaling', function(options) {
-            updateStatus(`Scaling: ${options.target.symbolData?.name || 'Object'}`);
-        });
-
-        canvas.on('object:rotating', function(options) {
-            updateStatus(`Rotating: ${options.target.symbolData?.name || 'Object'}`);
-        });
     </script>
 </body>
 </html>
